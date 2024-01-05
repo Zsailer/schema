@@ -7,6 +7,29 @@ from jupyter_core.paths import jupyter_path
 
 __version__ = "0.1"
 
+# If IPython is installed and jupyter
+try:
+    from IPython import get_ipython
+    from IPython.core.completer import (
+        completion_matcher,
+        CompletionContext,
+        _convert_matcher_v1_result_to_v2,
+    )
+
+    @completion_matcher(api_version=2)
+    def schema_matcher(context: CompletionContext):
+        if context.full_text.endswith("get_jupyter_schema("):
+            schema_list = [f'"{s}"' for s in list_schemas()]
+            return _convert_matcher_v1_result_to_v2(
+                matches=schema_list, type="path", suppress_if_matches=True
+            )
+        return _convert_matcher_v1_result_to_v2()
+
+    ip = get_ipython()
+    ip.Completer.custom_matchers.append(schema_matcher)
+except:
+    pass
+
 
 class JupyterSchemaNotFound(Exception):
     """A exception type for missing schemas"""
